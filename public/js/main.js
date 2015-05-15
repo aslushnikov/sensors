@@ -1,20 +1,18 @@
+var sample;
+
 document.addEventListener("DOMContentLoaded", function() {
-    var eventsQueue = [];
-    initializeThreeJS(document.body, eventsQueue);
+    initializeThreeJS(document.body);
     var evtSource = new EventSource("./events", { withCredentials: false });
 
     evtSource.onmessage = function(e) {
         var newElement = document.createElement("div");
         var obj = JSON.parse(e.data);
         obj.loggingTime = new Date(obj.loggingTime);
-        if (!eventsQueue.length)
-            console.log(obj);
-        eventsQueue.push(obj);
-        //document.body.appendChild(newElement);
+        sample = obj;
     }
 });
 
-function initializeThreeJS(container, eventsQueue) {
+function initializeThreeJS(container) {
     // set the scene size
     var WIDTH = 400,
         HEIGHT = 300;
@@ -56,46 +54,17 @@ function initializeThreeJS(container, eventsQueue) {
     light.position.y = camera.position.y;
     light.position.z = camera.position.z;
 
-    var lastUpdateTimestamp;
-    var lastSampleTimestamp;
-    var firstUpdate;
     function render(timestamp) {
-        var renderDelta = lastUpdateTimestamp ? timestamp - lastUpdateTimestamp : 0;
-
-        var sample = getSample(renderDelta, lastSampleTimestamp, timestamp - firstUpdate);
         if (sample) {
             model.rotation.x = sample.motionPitch;
             model.rotation.y = sample.motionRoll;
             model.rotation.z = sample.motionYaw;
-            lastSampleTimestamp = sample.loggingTime.getTime();
-            lastUpdateTimestamp = timestamp;
-            if (!firstUpdate)
-                firstUpdate = timestamp;
         }
         renderer.render(scene, camera);
         window.requestAnimationFrame(render);
     }
 
-    function getSample(renderDelta, lastSampleTimestamp, firstUpdate)
-    {
-        if (!eventsQueue.length)
-            return null;
-        if (!renderDelta || !lastSampleTimestamp)
-            return eventsQueue.shift();
-        var sample = null;
-        while (eventsQueue.length && eventsQueue[0].loggingTime.getTime() - lastSampleTimestamp < renderDelta)
-            sample = eventsQueue.shift();
-        if (!eventsQueue.length) {
-            console.log("Done." + firstUpdate);
-            console.log(sample);
-        }
-        return sample;
-    }
-
     window.requestAnimationFrame(render);
-
-    // DEBUG
-    window.model = model;
 }
 
 function createModel() {
