@@ -35,10 +35,6 @@ function initializeThreeJS(container, eventsQueue) {
     // add the camera to the scene
     scene.add(camera);
 
-    // the camera starts at 0,0,0
-    // so pull it back
-    camera.position.z = 300;
-
     // start the renderer
     renderer.setSize(WIDTH, HEIGHT);
 
@@ -48,7 +44,17 @@ function initializeThreeJS(container, eventsQueue) {
     // attach model
     var model = createModel();
     scene.add(model);
-    scene.add(createLight());
+    var light = createLight();
+    scene.add(light);
+
+    // the camera starts at 0,0,0
+    // so pull it back
+    // camera.position.y = 300;
+    camera.position.z = 150;
+    camera.lookAt(model.position);
+    light.position.x = camera.position.x;
+    light.position.y = camera.position.y;
+    light.position.z = camera.position.z;
 
     var lastUpdateTimestamp;
     var lastSampleTimestamp;
@@ -58,7 +64,7 @@ function initializeThreeJS(container, eventsQueue) {
 
         var sample = getSample(renderDelta, lastSampleTimestamp, timestamp - firstUpdate);
         if (sample) {
-            model.rotation.x = sample.motionRoll;
+            model.rotation.x = sample.motionPitch;
             model.rotation.y = sample.motionRoll;
             model.rotation.z = sample.motionYaw;
             lastSampleTimestamp = sample.loggingTime.getTime();
@@ -76,8 +82,8 @@ function initializeThreeJS(container, eventsQueue) {
             return null;
         if (!renderDelta || !lastSampleTimestamp)
             return eventsQueue.shift();
-        var sample = eventsQueue.shift();
-        while (eventsQueue.length && sample.loggingTime.getTime() - lastSampleTimestamp < renderDelta)
+        var sample = null;
+        while (eventsQueue.length && eventsQueue[0].loggingTime.getTime() - lastSampleTimestamp < renderDelta)
             sample = eventsQueue.shift();
         if (!eventsQueue.length) {
             console.log("Done." + firstUpdate);
