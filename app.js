@@ -14,22 +14,24 @@ app.get('/events', sse, function(req, res) {
     // res.json({here: "is", another: "event"});
     console.log("Client connected.");
     clients.add(res);
+    readStream(res);
     res.on("close", function() {
         console.log("Client gone.");
         clients.delete(res);
     });
 });
+
 app.use(express.static(__dirname + '/public'));
 
 app.listen(4000);
 console.log("Server is running at http://localhost:4000");
 
-function readStream() {
+function readStream(client) {
     var stream = fs.createReadStream("assets/dump.csv");
     csv
         .fromStream(stream, {headers : true})
         .on("data", function(data){
-            console.log(data);
+            client.json(data);
         })
         .on("end", function(){
             console.log("done");
