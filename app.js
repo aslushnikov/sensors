@@ -20,10 +20,13 @@ app.get('/events', sse, function(req, res) {
     });
 });
 app.ws('/', function(ws, req) {
-    console.log("Sensor connected");
+    console.log("iPhone connected.");
     ws.on('message', function(msg) {
         var obj = JSON.parse(msg);
         pushDataToClients(obj);
+    });
+    ws.on('close', function() {
+        console.log("iPhone gone.");
     });
 });
 
