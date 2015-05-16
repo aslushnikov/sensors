@@ -31,6 +31,10 @@ wss.on("connection", function(ws){
         var obj = JSON.parse(msg);
         pushDataToClients(obj);
     });
+    ws.on('error', function(error) {
+        pushDataToClients(wss.clients.length, "deviceCount");
+        console.log("Device gone.");
+    });
     ws.on('close', function() {
         pushDataToClients(wss.clients.length, "deviceCount");
         console.log("Device gone.");
