@@ -3,8 +3,11 @@ var fs = require("fs")
   , express = require('express')
   , cors = require("cors")
   , sse = require('connect-sse')()
+  , http = require("http")
+  , WebSocketServer = require("ws").Server
+
 var app = express();
-var expressWs = require('express-ws')(app); //app = express app
+var server = http.createServer(app);
 
 app.use(cors());
 
@@ -19,7 +22,10 @@ app.get('/events', sse, function(req, res) {
         clients.delete(res);
     });
 });
-app.ws('/', function(ws, req) {
+
+var wss = new WebSocketServer({server: server});
+
+wss.on("connection", function(ws){
     console.log("iPhone connected.");
     ws.on('message', function(msg) {
         var obj = JSON.parse(msg);
@@ -33,7 +39,7 @@ app.ws('/', function(ws, req) {
 app.use(express.static(__dirname + '/public'));
 
 var port = process.env.PORT || 4000;
-app.listen(port);
+server.listen(port);
 console.log("Server is running at http://localhost:%d", port);
 
 function pushDataToClients(data) {
