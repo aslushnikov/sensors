@@ -1,6 +1,5 @@
 // require sse
 var fs = require("fs")
-  , csv = require("fast-csv")
   , express = require('express')
   , cors = require("cors")
   , sse = require('connect-sse')()
@@ -20,7 +19,7 @@ app.get('/events', sse, function(req, res) {
         clients.delete(res);
     });
 });
-app.ws('/ws', function(ws, req) {
+app.ws('/', function(ws, req) {
     console.log("Sensor connected");
     ws.on('message', function(msg) {
         var obj = JSON.parse(msg);
@@ -30,20 +29,9 @@ app.ws('/ws', function(ws, req) {
 
 app.use(express.static(__dirname + '/public'));
 
-app.listen(4000);
-console.log("Server is running at http://localhost:4000");
-
-function readStream(client) {
-    var stream = fs.createReadStream("assets/dump.csv");
-    csv
-        .fromStream(stream, {headers : true})
-        .on("data", function(data){
-            client.json(data);
-        })
-        .on("end", function(){
-            console.log("done");
-        });
-}
+var port = process.env.PORT || 4000;
+app.listen(port);
+console.log("Server is running at http://localhost:%d", port);
 
 function pushDataToClients(data) {
     for (var client of clients)
