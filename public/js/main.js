@@ -7,8 +7,13 @@ document.addEventListener("DOMContentLoaded", function() {
     evtSource.onmessage = function(e) {
         var newElement = document.createElement("div");
         var obj = JSON.parse(e.data);
-        obj.loggingTime = new Date(obj.loggingTime);
-        sample = obj;
+        var quaternion = {
+            x: obj[0],
+            y: obj[1],
+            z: obj[2],
+            w: obj[3]
+        };
+        sample = quaternion;
     }
 });
 
@@ -48,7 +53,10 @@ function initializeThreeJS(container) {
     // the camera starts at 0,0,0
     // so pull it back
     // camera.position.y = 300;
+    //camera.position.x = 150;
+    window.camera = camera;
     camera.position.z = 150;
+    camera.position.y = -150;
     camera.lookAt(model.position);
     light.position.x = camera.position.x;
     light.position.y = camera.position.y;
@@ -56,9 +64,9 @@ function initializeThreeJS(container) {
 
     function render(timestamp) {
         if (sample) {
-            model.rotation.x = sample.motionPitch;
-            model.rotation.y = sample.motionRoll;
-            model.rotation.z = sample.motionYaw;
+            var quaternion = new THREE.Quaternion();
+            quaternion.set(sample.x, sample.y, sample.z, sample.w);
+            model.rotation.setFromQuaternion(quaternion);
         }
         renderer.render(scene, camera);
         window.requestAnimationFrame(render);
@@ -68,23 +76,18 @@ function initializeThreeJS(container) {
 }
 
 function createModel() {
-    // set up the sphere vars
-    var radius = 50,
-        segments = 16,
-        rings = 16;
-
     var cubeMaterials = [
         new THREE.MeshLambertMaterial({ color: 0xCCCCCC }),
         new THREE.MeshLambertMaterial({ color: 0xCCCCCC }),
         new THREE.MeshLambertMaterial({ color: 0xCCCCCC }),
-        new THREE.MeshLambertMaterial({ color: 0xCCCCCC }),
+        new THREE.MeshLambertMaterial({ color: 0x00CC00 }),
         new THREE.MeshLambertMaterial({ color: 0xCC0000 }),
         new THREE.MeshLambertMaterial({ color: 0xCCCCCC }),
     ];
     var box = new THREE.Mesh(new THREE.BoxGeometry( 50, 100, 5, 1, 1, 1 ), 
         new THREE.MeshFaceMaterial(cubeMaterials));
-    box.rotateX(-0.9);
 
+    window.box = box;
     return box;
 }
 
@@ -92,12 +95,6 @@ function createLight() {
     // create a point light
     var pointLight =
       new THREE.PointLight(0xFFFFFF);
-
-    // set its position
-    pointLight.position.x = 10;
-    pointLight.position.y = 50;
-    pointLight.position.z = 130;
-
     // add to the scene
     return pointLight;
 }
