@@ -15,6 +15,9 @@ document.addEventListener("DOMContentLoaded", function() {
         };
         sample = quaternion;
     }
+    evtSource.addEventListener("deviceCount", function(msg) {
+        document.querySelector("#deviceCount").textContent = msg.data;
+    });
 });
 
 function initializeThreeJS(container) {

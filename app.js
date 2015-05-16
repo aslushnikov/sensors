@@ -13,10 +13,9 @@ app.use(cors());
 
 var clients = new Set();
 app.get('/events', sse, function(req, res) {
-    // res.json({here: "is", another: "event"});
     console.log("Client connected.");
     clients.add(res);
-    // readStream(res);
+    res.json(wss.clients.length, "deviceCount");
     res.on("close", function() {
         console.log("Client gone.");
         clients.delete(res);
@@ -26,13 +25,15 @@ app.get('/events', sse, function(req, res) {
 var wss = new WebSocketServer({server: server});
 
 wss.on("connection", function(ws){
-    console.log("iPhone connected.");
+    console.log("Device connected.");
+    pushDataToClients(wss.clients.length, "deviceCount");
     ws.on('message', function(msg) {
         var obj = JSON.parse(msg);
         pushDataToClients(obj);
     });
     ws.on('close', function() {
-        console.log("iPhone gone.");
+        pushDataToClients(wss.clients.length, "deviceCount");
+        console.log("Device gone.");
     });
 });
 
@@ -42,8 +43,14 @@ var port = process.env.PORT || 4000;
 server.listen(port);
 console.log("Server is running at http://localhost:%d", port);
 
-function pushDataToClients(data) {
+function pushDataToClients(data, type) {
     for (var client of clients)
-        client.json(data);
+        client.json(data, type);
+}
+
+function sendConnectedDevices() {
+    var amount = wss.clients.length;
+    for (var client of clients)
+        client.json(amount, "deviceCount");
 }
 
